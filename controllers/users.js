@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const HttpError = require('../utils/HttpError');
 
 const DEFAULT_ERROR = 500;
 const VALIDATION_ERROR = 400;
@@ -11,15 +12,16 @@ module.exports.getUsers = (req, res) => {
 };
 
 module.exports.getUserById = (req, res) => {
-  User.findById(req.params.userId)
-    .then((user) => {
-      if (user === null) {
+  User.find({ _id: req.params.userId })
+    .orFail(new HttpError('idError', 'Пользователь по указанному _id не найден'))
+    .then((user) => res.send(user))
+    .catch((err) => {
+      if (err.name === 'idError' || err.name === 'CastError') {
         res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден' });
-        return;
+      } else {
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
-      res.send(user);
-    })
-    .catch((err) => res.status(DEFAULT_ERROR).send({ message: err.message }));
+    });
 };
 
 module.exports.createUser = (req, res) => {
@@ -43,19 +45,16 @@ module.exports.updateUser = (req, res) => {
       runValidators: true,
       upsert: false,
     })
-    .then((user) => {
-      if (user === null) {
-        res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь с указанным _id не найден' });
-        return;
-      }
-      res.send(user);
-    })
+    .orFail(new HttpError('idError', 'Пользователь с указанным _id не найден'))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при обновлении профиля' });
-        return;
+      } else if (err.name === 'idError' || err.name === 'CastError') {
+        res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь с указанным _id не найден' });
+      } else {
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
-      res.status(DEFAULT_ERROR).send({ message: err.message });
     });
 };
 
@@ -67,18 +66,15 @@ module.exports.updateAvatar = (req, res) => {
       runValidators: true,
       upsert: false,
     })
-    .then((user) => {
-      if (user === null) {
-        res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь с указанным _id не найден' });
-        return;
-      }
-      res.send(user);
-    })
+    .orFail(new HttpError('idError', 'Пользователь с указанным _id не найден'))
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при обновлении аватара' });
-        return;
+      } else if (err.name === 'idError' || err.name === 'CastError') {
+        res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь с указанным _id не найден' });
+      } else {
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
-      res.status(DEFAULT_ERROR).send({ message: err.message });
     });
 };

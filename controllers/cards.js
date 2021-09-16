@@ -1,4 +1,5 @@
 const Card = require('../models/card');
+const HttpError = require('../utils/HttpError');
 
 const DEFAULT_ERROR = 500;
 const VALIDATION_ERROR = 400;
@@ -26,15 +27,16 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
+    .orFail(new HttpError('idError', 'Карточка с указанным _id не найдена'))
     .populate(['owner', 'likes'])
-    .then((card) => {
-      if (card === null) {
+    .then((card) => res.send(card))
+    .catch((err) => {
+      if (err.name === 'idError' || err.name === 'CastError') {
         res.status(NOT_FOUND_ERROR).send({ message: 'Карточка с указанным _id не найдена' });
-        return;
+      } else {
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
-      res.send(card);
-    })
-    .catch((err) => res.status(DEFAULT_ERROR).send({ message: err.message }));
+    });
 };
 
 module.exports.likeCard = (req, res) => {
@@ -43,14 +45,17 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
+    .orFail(new HttpError('idError', 'Карточка с указанным _id не найдена'))
     .populate(['owner', 'likes'])
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные для постановки лайка' });
-        return;
+      } else if (err.name === 'idError' || err.name === 'CastError') {
+        res.status(NOT_FOUND_ERROR).send({ message: 'Карточка с указанным _id не найдена' });
+      } else {
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
-      res.status(DEFAULT_ERROR).send({ message: err.message });
     });
 };
 
@@ -60,13 +65,16 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
+    .orFail(new HttpError('idError', 'Карточка с указанным _id не найдена'))
     .populate(['owner', 'likes'])
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные для снятия лайка' });
-        return;
+      } else if (err.name === 'idError' || err.name === 'CastError') {
+        res.status(NOT_FOUND_ERROR).send({ message: 'Карточка с указанным _id не найдена' });
+      } else {
+        res.status(DEFAULT_ERROR).send({ message: err.message });
       }
-      res.status(DEFAULT_ERROR).send({ message: err.message });
     });
 };
