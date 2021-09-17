@@ -16,7 +16,9 @@ module.exports.getUserById = (req, res) => {
     .orFail(new HttpError('idError', 'Пользователь по указанному _id не найден'))
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'idError' || err.name === 'CastError') {
+      if (err.name === 'CastError') {
+        res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id пользователя' });
+      } else if (err.name === 'idError') {
         res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден' });
       } else {
         res.status(DEFAULT_ERROR).send({ message: err.message });
@@ -48,9 +50,9 @@ module.exports.updateUser = (req, res) => {
     .orFail(new HttpError('idError', 'Пользователь с указанным _id не найден'))
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при обновлении профиля' });
-      } else if (err.name === 'idError' || err.name === 'CastError') {
+      } else if (err.name === 'idError') {
         res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь с указанным _id не найден' });
       } else {
         res.status(DEFAULT_ERROR).send({ message: err.message });
@@ -69,9 +71,9 @@ module.exports.updateAvatar = (req, res) => {
     .orFail(new HttpError('idError', 'Пользователь с указанным _id не найден'))
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при обновлении аватара' });
-      } else if (err.name === 'idError' || err.name === 'CastError') {
+      } else if (err.name === 'idError') {
         res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь с указанным _id не найден' });
       } else {
         res.status(DEFAULT_ERROR).send({ message: err.message });

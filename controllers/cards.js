@@ -31,7 +31,9 @@ module.exports.deleteCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => res.send(card))
     .catch((err) => {
-      if (err.name === 'idError' || err.name === 'CastError') {
+      if (err.name === 'CastError') {
+        res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные для удаления карточки' });
+      } else if (err.name === 'idError') {
         res.status(NOT_FOUND_ERROR).send({ message: 'Карточка с указанным _id не найдена' });
       } else {
         res.status(DEFAULT_ERROR).send({ message: err.message });
@@ -49,9 +51,9 @@ module.exports.likeCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => res.send(card))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные для постановки лайка' });
-      } else if (err.name === 'idError' || err.name === 'CastError') {
+      } else if (err.name === 'idError') {
         res.status(NOT_FOUND_ERROR).send({ message: 'Карточка с указанным _id не найдена' });
       } else {
         res.status(DEFAULT_ERROR).send({ message: err.message });
@@ -69,9 +71,9 @@ module.exports.dislikeCard = (req, res) => {
     .populate(['owner', 'likes'])
     .then((card) => res.send(card))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
         res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные для снятия лайка' });
-      } else if (err.name === 'idError' || err.name === 'CastError') {
+      } else if (err.name === 'idError') {
         res.status(NOT_FOUND_ERROR).send({ message: 'Карточка с указанным _id не найдена' });
       } else {
         res.status(DEFAULT_ERROR).send({ message: err.message });
