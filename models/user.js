@@ -16,7 +16,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 8,
     select: false,
   },
 
@@ -24,7 +23,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     minlength: 2,
     maxlength: 30,
-    required: true,
     default: 'Жак-Ив Кусто',
   },
 
@@ -32,13 +30,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     minlength: 2,
     maxlength: 30,
-    required: true,
     default: 'Исследователь',
   },
 
   avatar: {
     type: String,
-    required: true,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
       validator: (avatar) => validator.isURL(avatar),
@@ -50,12 +46,12 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(email,
   return this.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        return Promise.reject(new HttpError(401, 'authError', 'Пользователь не найден'));
+        return Promise.reject(new HttpError(401, 'authError', 'Неверный логин или пароль'));
       }
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new HttpError(401, 'authError', 'Пользователь не найден'));
+            return Promise.reject(new HttpError(401, 'authError', 'Неверный логин или пароль'));
           }
           return user;
         });

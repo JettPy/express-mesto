@@ -78,7 +78,7 @@ module.exports.login = (req, res, next) => {
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, 'dev-secret', { expiresIn: '7d' });
-      res.cookie('jwt', token, { httpOnly: true }).end();
+      res.cookie('jwt', token, { httpOnly: true }).send({ message: 'Авторизация прошла успешно' });
     })
     .catch(next);
 };

@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const { celebrate, Joi, errors } = require('celebrate');
+const HttpError = require('./utils/HttpError');
 
 const { PORT = 3000 } = process.env;
 
@@ -20,11 +21,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-mongoose.connect('mongodb://localhost:27017/mestodb', {
-  // useNewUrlParser: true,
-  // useCreateIndex: true,
-  // useFindAndModify: false,
-});
+mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -48,8 +45,9 @@ app.use(auth);
 app.use('/users', users);
 app.use('/cards', cards);
 
+// eslint-disable-next-line no-unused-vars
 app.get('*', (req, res) => {
-  res.status(404).send({ message: 'Запрашиваемый ресурс не найден' });
+  throw new HttpError(404, 'notFoundError', 'Запрашиваемый ресурс не найден');
 });
 
 app.use(errors());
