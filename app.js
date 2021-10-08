@@ -10,6 +10,7 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const users = require('./routes/users');
@@ -22,6 +23,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
+
+app.use(requestLogger);
 
 app.post('/signin', celebrate({
   body: Joi.object().keys({
@@ -49,6 +52,8 @@ app.use('/cards', cards);
 app.get('*', (req, res) => {
   throw new HttpError(404, 'notFoundError', 'Запрашиваемый ресурс не найден');
 });
+
+app.use(errorLogger);
 
 app.use(errors());
 // eslint-disable-next-line no-unused-vars
